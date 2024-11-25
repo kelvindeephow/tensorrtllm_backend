@@ -222,13 +222,15 @@ class TritonPythonModel:
     def _postprocessing(self, tokens_batch, sequence_lengths):
         outputs = []
         for batch_idx, beam_tokens in enumerate(tokens_batch):
+            print(f"batch_idx {batch_idx} beam tokens: {beam_tokens}")
             for beam_idx, tokens in enumerate(beam_tokens):
+                print(f"batch_idx {batch_idx} beam_idx {beam_idx} tokens: {tokens}")
                 seq_len = sequence_lengths[batch_idx][beam_idx]
+                print(f"batch_idx {batch_idx} beam_idx {beam_idx} tokens seq_len: {tokens[:seq_len]}")
                 output = self.tokenizer.decode(
                     tokens[:seq_len],
                     skip_special_tokens=self.skip_special_tokens)
-                print(f"output: {output}")
-                if output == "�":
-                    print("question mark")
+                # if output == "�":
+                print(f"batch_idx {batch_idx} beam_idx {beam_idx} output: {output}")
                 outputs.append(output.encode('utf8'))
         return outputs
