@@ -227,5 +227,8 @@ class TritonPythonModel:
                 output = self.tokenizer.decode(
                     tokens[:seq_len],
                     skip_special_tokens=self.skip_special_tokens)
+                print(f"output: {output}")
+                if output == "�":
+                    print("question mark")
                 outputs.append(output.encode('utf8'))
         return outputs
