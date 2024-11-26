@@ -231,9 +231,7 @@ class TritonPythonModel:
                 input = tokens[:seq_len]
                 if self.previous_token:
                     print(f"{type(self.previous_token)}, {type(input)}")
-                    new_input = self.previous_token
-                    new_input.extend(input)
-                    input = new_input
+                    input = np.concatenate((self.previous_token, input))
                 print(f"batch_idx {batch_idx} beam_idx {beam_idx} tokens seq_len: {input}")
                 output = self.tokenizer.decode(
                     input,
