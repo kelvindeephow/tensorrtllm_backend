@@ -93,6 +93,8 @@ class TritonPythonModel:
         self.output_dtype = pb_utils.triton_string_to_numpy(
             output_config['data_type'])
 
+        self.previous_token = None
+
     def execute(self, requests):
         """`execute` must be implemented in every Python model. `execute`
         function receives a list of pb_utils.InferenceRequest as the only
@@ -220,29 +222,27 @@ class TritonPythonModel:
         print('Cleaning up...')
 
     def _postprocessing(self, tokens_batch, sequence_lengths):
-        outputs = []
-        previous_token = None
+        outputs = []        
         for batch_idx, beam_tokens in enumerate(tokens_batch):
             print(f"batch_idx {batch_idx} beam tokens: {beam_tokens}")
             for beam_idx, tokens in enumerate(beam_tokens):
                 print(f"batch_idx {batch_idx} beam_idx {beam_idx} tokens: {tokens}")
                 seq_len = sequence_lengths[batch_idx][beam_idx]
                 input = tokens[:seq_len]
-                if previous_token:
-                    input = previous_token + input
+                if self.previous_token:
+                    input = self.previous_token + input
                 print(f"batch_idx {batch_idx} beam_idx {beam_idx} tokens seq_len: {input}")
                 output = self.tokenizer.decode(
                     input,
                     skip_special_tokens=self.skip_special_tokens)
                 # fix for decoding problems with traditional chinese
                 # if decoding returns non-valid character save the token to decode in next iteration
-                if output == "�" and not previous_token:
-                    previous_token = input
-                    print(f"batch_idx {batch_idx} beam_idx {beam_idx} invalid output, previous_token: {previous_token}")
+                if output == "�" and not self.previous_token:
+                    self.previous_token = input
+                    print(f"batch_idx {batch_idx} beam_idx {beam_idx} invalid output, previous_token: {self.previous_token}")
                 else:                
-                    previous_token = None
+                    self.previous_token = None
                     print(f"batch_idx {batch_idx} beam_idx {beam_idx} output: {output}")
                     outputs.append(output.encode('utf8'))
                 
-
         return outputs
