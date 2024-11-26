@@ -221,16 +221,26 @@ class TritonPythonModel:
 
     def _postprocessing(self, tokens_batch, sequence_lengths):
         outputs = []
+        previous_token = None
         for batch_idx, beam_tokens in enumerate(tokens_batch):
             print(f"batch_idx {batch_idx} beam tokens: {beam_tokens}")
             for beam_idx, tokens in enumerate(beam_tokens):
                 print(f"batch_idx {batch_idx} beam_idx {beam_idx} tokens: {tokens}")
                 seq_len = sequence_lengths[batch_idx][beam_idx]
-                print(f"batch_idx {batch_idx} beam_idx {beam_idx} tokens seq_len: {tokens[:seq_len]}")
+                input = tokens[:seq_len]
+                if previous_token:
+                    input = [previous_token].extend(tokens[:seq_len])
+                print(f"batch_idx {batch_idx} beam_idx {beam_idx} tokens seq_len: {input}")
                 output = self.tokenizer.decode(
-                    tokens[:seq_len],
+                    input,
                     skip_special_tokens=self.skip_special_tokens)
-                # if output == "�":
+                # fix for decoding problems with traditional chinese
+                # if decoding returns non-valid character save the token to decode in next iteration
+                if output == "�" and not previous_token:
+                    previous_token = tokens[:seq_len][0]
+                    continue
+                
+                previous_token = None
                 print(f"batch_idx {batch_idx} beam_idx {beam_idx} output: {output}")
                 outputs.append(output.encode('utf8'))
         return outputs
