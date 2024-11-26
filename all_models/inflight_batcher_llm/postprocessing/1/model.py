@@ -229,7 +229,7 @@ class TritonPythonModel:
                 seq_len = sequence_lengths[batch_idx][beam_idx]
                 input = tokens[:seq_len]
                 if previous_token:
-                    input = [previous_token].extend(tokens[:seq_len])
+                    input = previous_token + input
                 print(f"batch_idx {batch_idx} beam_idx {beam_idx} tokens seq_len: {input}")
                 output = self.tokenizer.decode(
                     input,
@@ -237,10 +237,12 @@ class TritonPythonModel:
                 # fix for decoding problems with traditional chinese
                 # if decoding returns non-valid character save the token to decode in next iteration
                 if output == "�" and not previous_token:
-                    previous_token = tokens[:seq_len][0]
-                    continue
+                    previous_token = input
+                    print(f"batch_idx {batch_idx} beam_idx {beam_idx} invalid output, previous_token: {previous_token}")
+                else:                
+                    previous_token = None
+                    print(f"batch_idx {batch_idx} beam_idx {beam_idx} output: {output}")
+                    outputs.append(output.encode('utf8'))
                 
-                previous_token = None
-                print(f"batch_idx {batch_idx} beam_idx {beam_idx} output: {output}")
-                outputs.append(output.encode('utf8'))
+
         return outputs
