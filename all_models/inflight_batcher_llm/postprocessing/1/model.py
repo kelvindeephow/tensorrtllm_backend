@@ -245,5 +245,8 @@ class TritonPythonModel:
                     self.previous_token = None
                     print(f"batch_idx {batch_idx} beam_idx {beam_idx} output: {output}")
                     outputs.append(output.encode('utf8'))
-                
+
+        if len(outputs) == 0:
+            outputs.append(''.encode('utf8'))        
+             
         return outputs
